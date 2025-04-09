@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pay Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200">
+    <!-- Check for dark mode preference -->
+    <script>
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl font-bold text-primary mb-2">Pay Calculator</h1>
+            <p class="text-gray-600 dark:text-gray-400">Track your hours and calculate your pay</p>
+        </header>
+
+        <!-- Settings Panel -->
+        <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-primary">Settings</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Pay Rates -->
+                <div>
+                    <h3 class="font-medium mb-3">Pay Rates</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <label class="w-32 text-gray-600 dark:text-gray-400">Weekday Rate</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">$</span>
+                                <input type="number" id="weekday-rate" min="0" step="0.01" value="12.84" class="w-28 px-3 py-2 pl-7 text-base border rounded dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <span class="ml-2 text-gray-500 dark:text-gray-400">per hour</span>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="w-32 text-gray-600 dark:text-gray-400">Weekend Rate</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 dark:text-gray-400">$</span>
+                                <input type="number" id="weekend-rate" min="0" step="0.01" value="15.41" class="w-28 px-3 py-2 pl-7 text-base border rounded dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <span class="ml-2 text-gray-500 dark:text-gray-400">per hour</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pay Period -->
+                <div>
+                    <h3 class="font-medium mb-3">Pay Period</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-4">
+                            <div>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="pay-period" value="weekly" class="sr-only peer" checked>
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                    <span class="ml-3 text-gray-600 dark:text-gray-400">Weekly</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="pay-period" value="biweekly" class="sr-only peer">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                    <span class="ml-3 text-gray-600 dark:text-gray-400">Bi-weekly</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Public holidays are paid at double rate</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Shifts longer than 5 hours have a 30 minute unpaid break</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Week 1 -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 text-primary">Week 1</h2>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-12 gap-2 items-center font-semibold text-sm">
+                            <div class="col-span-3">Day</div>
+                            <div class="col-span-3">Hours</div>
+                            <div class="col-span-3">Public Holiday</div>
+                            <div class="col-span-3">Pay</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Wednesday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="WEDNESDAY" data-week="1">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="WEDNESDAY" data-week="1">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="WEDNESDAY" data-week="1">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Thursday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="THURSDAY" data-week="1">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="THURSDAY" data-week="1">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="THURSDAY" data-week="1">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Friday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="FRIDAY" data-week="1">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="FRIDAY" data-week="1">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="FRIDAY" data-week="1">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Saturday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="SATURDAY" data-week="1">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="SATURDAY" data-week="1">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="SATURDAY" data-week="1">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Sunday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="SUNDAY" data-week="1">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="SUNDAY" data-week="1">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="SUNDAY" data-week="1">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Monday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="MONDAY" data-week="1">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="MONDAY" data-week="1">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="MONDAY" data-week="1">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Tuesday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="TUESDAY" data-week="1">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="TUESDAY" data-week="1">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="TUESDAY" data-week="1">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week 2 -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 text-primary">Week 2</h2>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-12 gap-2 items-center font-semibold text-sm">
+                            <div class="col-span-3">Day</div>
+                            <div class="col-span-3">Hours</div>
+                            <div class="col-span-3">Public Holiday</div>
+                            <div class="col-span-3">Pay</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Wednesday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="WEDNESDAY" data-week="2">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="WEDNESDAY" data-week="2">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="WEDNESDAY" data-week="2">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Thursday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="THURSDAY" data-week="2">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="THURSDAY" data-week="2">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="THURSDAY" data-week="2">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Friday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="FRIDAY" data-week="2">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="FRIDAY" data-week="2">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="FRIDAY" data-week="2">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Saturday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="SATURDAY" data-week="2">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="SATURDAY" data-week="2">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="SATURDAY" data-week="2">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Sunday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="SUNDAY" data-week="2">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="SUNDAY" data-week="2">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="SUNDAY" data-week="2">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Monday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="MONDAY" data-week="2">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="MONDAY" data-week="2">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="MONDAY" data-week="2">$0.00</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-12 gap-2 items-center">
+                            <div class="col-span-3">Tuesday</div>
+                            <div class="col-span-3">
+                                <input type="number" min="0" max="24" step="0.5" class="w-full px-3 py-2 text-base border rounded dark:bg-gray-700 dark:border-gray-600" data-day="TUESDAY" data-week="2">
+                            </div>
+                            <div class="col-span-3">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" data-holiday="TUESDAY" data-week="2">
+                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="col-span-3 pay-value" data-pay="TUESDAY" data-week="2">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Totals Card -->
+        <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4 text-primary">Summary</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Hours</p>
+                    <p class="text-2xl font-bold" id="total-hours">0</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Hours Paid</p>
+                    <p class="text-2xl font-bold" id="total-hours-paid">0</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Pay</p>
+                    <p class="text-2xl font-bold text-primary" id="total-pay">$0.00</p>
+                </div>
+            </div>
+            <div class="mt-6 md:flex md:justify-between">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Rates: Weekday: <span id="summary-weekday-rate">$12.84</span>/hr, Weekend: <span id="summary-weekend-rate">$15.41</span>/hr</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Public holidays are paid at double rate</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Shifts longer than 5 hours have a 30 minute unpaid break</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Total Shifts: <span id="total-shifts">0</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Default rates 
+            let weekdayRate = 12.84;
+            let weekendRate = 15.41;
+            const WEEKEND_DAYS = ['SATURDAY', 'SUNDAY'];
+            
+            // Get all elements
+            const hourInputs = document.querySelectorAll('input[type="number"][data-day]');
+            const holidayCheckboxes = document.querySelectorAll('input[type="checkbox"][data-holiday]');
+            const weekdayRateInput = document.getElementById('weekday-rate');
+            const weekendRateInput = document.getElementById('weekend-rate');
+            const weeklyRadioBtn = document.querySelector('input[name="pay-period"][value="weekly"]');
+            const biweeklyRadioBtn = document.querySelector('input[name="pay-period"][value="biweekly"]');
+            
+            // Initialize the UI
+            updateWeekVisibility();
+            updateRateSummary();
+            
+            // Calculate pay for a specific day
+            function calculateDayPay(hours, isHoliday, day) {
+                if (!hours || hours <= 0) return { hoursPaid: 0, pay: 0 };
+                
+                // Calculate hours paid (subtract 0.5 for shifts > 5 hours)
+                const hoursPaid = hours > 5 ? hours - 0.5 : hours;
+                
+                // Determine base rate based on day
+                const rate = WEEKEND_DAYS.includes(day) ? weekendRate : weekdayRate;
+                
+                // Calculate pay (double rate for holidays)
+                const pay = isHoliday ? hoursPaid * rate * 2 : hoursPaid * rate;
+                
+                return {
+                    hoursPaid,
+                    pay
+                };
+            }
+            
+            // Update rates from input fields
+            function updateRates() {
+                weekdayRate = parseFloat(weekdayRateInput.value) || 12.84;
+                weekendRate = parseFloat(weekendRateInput.value) || 15.41;
+                updateRateSummary();
+                calculatePay();
+            }
+            
+            // Update rate summary in the summary section
+            function updateRateSummary() {
+                document.getElementById('summary-weekday-rate').textContent = `$${weekdayRate.toFixed(2)}`;
+                document.getElementById('summary-weekend-rate').textContent = `$${weekendRate.toFixed(2)}`;
+            }
+            
+            // Show/hide week 2 based on pay period selection
+            function updateWeekVisibility() {
+                const isWeekly = weeklyRadioBtn.checked;
+                const week2Elements = document.querySelectorAll('[data-week="2"]');
+                
+                if (isWeekly) {
+                    // Hide Week 2 container
+                    const week2Col = document.querySelector('.grid-cols-1.md\\:grid-cols-2.gap-6').children[1];
+                    if (week2Col) {
+                        week2Col.style.display = 'none';
+                    }
+                    
+                    // Reset week 2 inputs to avoid them counting in weekly mode
+                    week2Elements.forEach(el => {
+                        if (el.tagName === 'INPUT' && el.type === 'number') {
+                            el.value = '';
+                        }
+                        if (el.tagName === 'INPUT' && el.type === 'checkbox') {
+                            el.checked = false;
+                        }
+                    });
+                } else {
+                    // Show Week 2 container
+                    const week2Col = document.querySelector('.grid-cols-1.md\\:grid-cols-2.gap-6').children[1];
+                    if (week2Col) {
+                        week2Col.style.display = '';
+                    }
+                }
+                
+                calculatePay();
+            }
+            
+            // Calculate all pay values
+            function calculatePay() {
+                console.log("Calculating pay...");
+                
+                let totalHours = 0;
+                let totalHoursPaid = 0;
+                let totalPay = 0;
+                let totalShifts = 0;
+                
+                // Loop through all hour inputs
+                hourInputs.forEach(input => {
+                    // Skip week 2 if in weekly mode
+                    if (weeklyRadioBtn.checked && input.dataset.week === "2") return;
+                    
+                    const day = input.dataset.day;
+                    const week = input.dataset.week;
+                    const hours = parseFloat(input.value) || 0;
+                    
+                    if (hours > 0) {
+                        totalShifts++;
+                        totalHours += hours;
+                    }
+                    
+                    // Find corresponding holiday checkbox
+                    const holidayCheckbox = document.querySelector(`input[data-holiday="${day}"][data-week="${week}"]`);
+                    const isHoliday = holidayCheckbox ? holidayCheckbox.checked : false;
+                    
+                    // Calculate pay for this day
+                    const dayResult = calculateDayPay(hours, isHoliday, day);
+                    
+                    if (hours > 0) {
+                        totalHoursPaid += dayResult.hoursPaid;
+                    }
+                    totalPay += dayResult.pay;
+                    
+                    // Update pay display
+                    const payDisplay = document.querySelector(`[data-pay="${day}"][data-week="${week}"]`);
+                    if (payDisplay) {
+                        payDisplay.textContent = `$${dayResult.pay.toFixed(2)}`;
+                    }
+                });
+                
+                // Update totals
+                document.getElementById('total-hours').textContent = totalHours.toFixed(1);
+                document.getElementById('total-hours-paid').textContent = totalHoursPaid.toFixed(1);
+                document.getElementById('total-pay').textContent = `$${totalPay.toFixed(2)}`;
+                document.getElementById('total-shifts').textContent = totalShifts;
+            }
+            
+            // Add event listeners to inputs
+            hourInputs.forEach(input => {
+                input.addEventListener('input', calculatePay);
+                input.addEventListener('change', calculatePay);
+                input.addEventListener('blur', calculatePay);
+            });
+            
+            holidayCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', calculatePay);
+            });
+            
+            // Add event listeners to settings fields
+            weekdayRateInput.addEventListener('input', updateRates);
+            weekdayRateInput.addEventListener('change', updateRates);
+            weekdayRateInput.addEventListener('blur', updateRates);
+            
+            weekendRateInput.addEventListener('input', updateRates);
+            weekendRateInput.addEventListener('change', updateRates);
+            weekendRateInput.addEventListener('blur', updateRates);
+            
+            // Add event listeners to pay period radio buttons
+            weeklyRadioBtn.addEventListener('change', updateWeekVisibility);
+            biweeklyRadioBtn.addEventListener('change', updateWeekVisibility);
+            
+            // Force an initial calculation
+            calculatePay();
+            
+            // Also recalculate on window load to ensure everything is properly initialized
+            window.addEventListener('load', function() {
+                updateWeekVisibility();
+                updateRateSummary();
+                calculatePay();
+            });
+        });
+    </script>
+</body>
+</html>
